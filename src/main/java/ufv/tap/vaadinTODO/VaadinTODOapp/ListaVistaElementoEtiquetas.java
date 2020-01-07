@@ -17,7 +17,7 @@ public class ListaVistaElementoEtiquetas {
 
 
 
-	public void addTarea(VistaElementoEtiqueta vet) {
+	public void addEtiqueta(VistaElementoEtiqueta vet) {
 		etiquetas.add(vet);
 	}
 }

@@ -19,6 +19,17 @@ public class ListaEtiquetas {
 		etiquetas.add(e);
 	}
 	
+	public ArrayList<String> getTagLabels() {
+		
+		ArrayList<String> nombres = new ArrayList<String>();
+	
+		for (Etiqueta e : etiquetas) {
+			nombres.add(e.getNombre());
+		}
+		
+		return nombres;
+	}
+	
 	public ArrayList<String> getNombreEtiquetas(ListaTareas listaTareas, String valorActual) {
 		
 		ArrayList<String> nombres = new ArrayList<String>();
@@ -27,7 +38,6 @@ public class ListaEtiquetas {
 		if(listaTareas.getTareas().size() == 0) {
 			return nombres;
 		}
-			
 		
 		for (Tarea tarea : listaTareas.getTareas()) {
 			if(!nombres.contains(tarea.getEtiqueta().getNombre()))

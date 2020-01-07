@@ -127,7 +127,7 @@ public class VistaElementoTarea {
 
 	private String calcularDiasDiferencia(Date fecha) {
 
-	    int dias = (int) ((new Date().getTime() - fecha.getTime()) / 86400000) * -1 + 1;
+		int dias = (int) ((new Date().getTime() - fecha.getTime()) / 86400000) * -1 + 1;
 	    
 		return Integer.toString(dias);
 	}

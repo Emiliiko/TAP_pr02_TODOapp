@@ -6,6 +6,7 @@ import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.time.ZoneId;
 
@@ -43,6 +44,7 @@ public class MainView extends HorizontalLayout {
 	public Label tagLabel; // Título
 	// Subcontenedor con todas las etiquetas
 	public VerticalLayout allTagsLayout;
+	public Grid<VistaElementoEtiqueta> gridEtiquetas;
 	
 	// Contenedor Tareas
 	public VerticalLayout mainTasksLayout;
@@ -81,6 +83,7 @@ public class MainView extends HorizontalLayout {
 	public ListaVistaElementoTareas listaVistaTareas = new ListaVistaElementoTareas();
 	// Lista Etiquetas
 	public ListaEtiquetas listaEtiquetas = new ListaEtiquetas();
+	// Lista Vista Etiquetas
 	public ListaVistaElementoEtiquetas listaVistaEtiquetas = new ListaVistaElementoEtiquetas();
 	
 	
@@ -107,21 +110,11 @@ public class MainView extends HorizontalLayout {
     	// Subcontenedor con todas las etiquetas
     	allTagsLayout = crearLayoutV();
     	
-    	//////////////
-    	Etiqueta e = new Etiqueta("tag");
-    	VistaElementoEtiqueta ve = new VistaElementoEtiqueta(e);
-    	Etiqueta e1 = new Etiqueta("tag1");
-    	VistaElementoEtiqueta ve1 = new VistaElementoEtiqueta(e1);
-    	//allTagsLayout.add(ve.getLayout());
-    	//////////////
-    	//////////////
-		Grid<VistaElementoEtiqueta> grid = new Grid<>();
-		grid.getStyle().set("background", "none").set("border", "none").set("width", "200px");
-		grid.setItems(ve, ve1);
-		grid.addComponentColumn(item -> item.getIcono());
-		grid.addComponentColumn(item -> item.getNombre());
-		allTagsLayout.add(grid);
-		/////////////
+    	gridEtiquetas = new Grid<>();
+		gridEtiquetas.getStyle().set("background", "none").set("border", "none").set("width", "300px");
+		gridEtiquetas.addComponentColumn(item -> item.getIcono());
+		gridEtiquetas.addComponentColumn(item -> item.getNombre());
+		allTagsLayout.add(gridEtiquetas);
     	
     	tagLayout.add(tagLabel, allTagsLayout);
     	
@@ -152,21 +145,6 @@ public class MainView extends HorizontalLayout {
     	.set("font-size", "var(--lumo-font-size-xl)").set("height", "41px").set("cursor", "pointer");
     	orderLayout.add(noteLabel, orderComboBox, newTask);
     	
-    	/*
-		//////////////
-		Tarea t1 = new Tarea("Prueba1", "Alta", new Date(), "Érase una pinga pará", false, new Etiqueta("tag1"));
-		VistaElementoTarea vista1 = new VistaElementoTarea(t1);
-		Tarea t2 = new Tarea("Prueba2", "Media", new Date(), "Érase un bollo bien sano", false, new Etiqueta("tag2"));
-		VistaElementoTarea vista2 = new VistaElementoTarea(t2);
-		/////////////
-		//////////////
-		Tarea t3 = new Tarea("Prueba3", "Baja", new Date(), "Érase una vez", true, new Etiqueta("tag3"));
-		VistaElementoTarea vista3 = new VistaElementoTarea(t3);
-		Tarea t4 = new Tarea("Prueba4", "", new Date(), "Éranse dos veces", true, new Etiqueta("tag4"));
-		VistaElementoTarea vista4 = new VistaElementoTarea(t4);
-		/////////////
-		//////////////
-		 */
 		gridTareas = new Grid<>();
 		gridTareas.getStyle().set("background", "none").set("border", "none").set("width", "500px");
 		gridTareas.addComponentColumn(item -> item.getCheckbox());
@@ -191,13 +169,7 @@ public class MainView extends HorizontalLayout {
 			tagsComboBox.setValue(vet.getEtiqueta().getNombre());
 			save.setText("Guardar");
 		});
-		/////////////
-		
-		
-		
-		
-		
-		
+
     	mainTasksLayout.add(orderLayout, gridTareas);
 
     	
@@ -218,6 +190,7 @@ public class MainView extends HorizontalLayout {
     	titulo.getStyle().set("position", "relative");
     	titulo.getStyle().set("left", "50%");
     	titulo.getStyle().set("transform", "translateX(-50%)");
+    	titulo.getStyle().set("padding", "0");
     	titleLayout.add(titulo);
     	// Subcontenedor prioridad - fecha
     	priorityDateLayout = crearLayoutH();
@@ -262,7 +235,8 @@ public class MainView extends HorizontalLayout {
     	descripcion.setPlaceholder("Descripción de la tarea...");
     	// Subcontenedor Etiquetas
     	tagsComboBox = new ComboBox<>();
-    	//tagsComboBox.setItems("adios");
+    	tagsComboBox.setItems("Sin Categoría");
+		tagsComboBox.setValue("Sin Categoría");
     	tagsComboBox.setPlaceholder("Categoría");
     	tagsComboBox.getStyle().set("position", "relative");
     	tagsComboBox.getStyle().set("left", "50%");
@@ -283,14 +257,20 @@ public class MainView extends HorizontalLayout {
     	saveNotification = new Notification("La nota se ha creado", 3500, Position.TOP_END);
     	updateNotification = new Notification("La nota se ha actualizado", 3500, Position.TOP_END);
     	save = new Button("Crear", event -> {
-    		editLayout.getStyle().set("left", "100%");
-    		if(save.getText().equals("Crear")) {
-    			crearTarea();
-    			saveNotification.open();
-    		}
-    		else if(save.getText().equals("Guardar")) {
-    			//updateTarea();
-    			updateNotification.open();
+    		
+    		titulo.getStyle().set("border", "none");
+    		datePicker.getStyle().set("border", "none");
+    		
+    		if(datosValidados()) {
+    			if(save.getText().equals("Crear")) {
+    		
+    				crearTarea();
+        			saveNotification.open();
+	    		}
+	    		else if(save.getText().equals("Guardar")) {
+	    			//updateTarea();
+	    			updateNotification.open();
+	    		}
     		}
     		
     	});
@@ -307,16 +287,54 @@ public class MainView extends HorizontalLayout {
     	add(tagLayout, mainTasksLayout, editLayout);
     	
     }
+    
+    public boolean datosValidados() {
+
+		Notification n;
+		
+		//Validación del Título
+		if(titulo.isEmpty() || titulo.getValue() == null || titulo.getValue().equals("")) {
+			n = new Notification("Falta asignar un Título", 3500, Position.TOP_END);
+			n.open();
+			titulo.focus();
+			return false;
+		}
+		
+		//Validación de Fecha
+		if(datePicker.isEmpty()){
+			n = new Notification("No se ha seleccionado ninguna fecha", 3500, Position.TOP_END);
+			n.open();
+			datePicker.focus();
+			return false;
+		}
+		Date d = Date.from(datePicker.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
+		int dias = (int) ((new Date().getTime() - d.getTime()) / 86400000) * -1 + 1;	
+		if(dias < 0) {
+			n = new Notification("La fecha seleccionada ya pasó", 3500, Position.TOP_END);
+			n.open();
+			datePicker.focus();
+			return false;
+		}
+		
+		return true;
+	}
 
 
 	private void crearTarea() {
-		
 		String tituloTarea = titulo.getValue();
-		String prioridad = priorityDateComboBox.getValue();
+		String prioridad;
+		if(priorityDateComboBox.isEmpty())
+			prioridad = "Sin Prioridad";
+		else
+			prioridad = priorityDateComboBox.getValue();
 		Date fechaTarea = Date.from(datePicker.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
 		String descripcionTarea = descripcion.getValue();
 		boolean completada = false;
-		Etiqueta etiquetaTarea = new Etiqueta(tagsComboBox.getValue());
+		Etiqueta etiquetaTarea;
+		if(tagsComboBox.isEmpty())
+			etiquetaTarea = new Etiqueta("Sin Categoría");
+		else
+			etiquetaTarea = new Etiqueta(tagsComboBox.getValue());
 		
 		// Backend
 		Tarea t = new Tarea(tituloTarea, prioridad, fechaTarea, descripcionTarea, completada, etiquetaTarea);
@@ -324,6 +342,8 @@ public class MainView extends HorizontalLayout {
 		
 		// Front
 		updateVista();
+		
+		editLayout.getStyle().set("transition", ".7s").set("position", "relative").set("left", "100%");
 	}
 
 
@@ -339,7 +359,23 @@ public class MainView extends HorizontalLayout {
 		gridTareas.setItems(listaVistaTareas.getTareas());
 		
 		// Actualizar Contenedor Etiquetas
+		listaVistaEtiquetas.getEtiquetas().clear();
+		listaEtiquetas.getEtiquetas().clear();
+		// Creación de array temporal de Etiquetas
+		ArrayList<String> nombres = listaEtiquetas.getTagLabels();
 		
+		for (Tarea tarea : listaTareas.getTareas()) {
+			if(!nombres.contains(tarea.getEtiqueta().getNombre())) {
+				nombres.add(tarea.getEtiqueta().getNombre());
+				listaEtiquetas.addEtiqueta(new Etiqueta(tarea.getEtiqueta().getNombre()));
+			}
+		}
+		
+		for (Etiqueta etiqueta : listaEtiquetas.getEtiquetas()) {
+			listaVistaEtiquetas.addEtiqueta(new VistaElementoEtiqueta(etiqueta));
+		}
+		
+		gridEtiquetas.setItems(listaVistaEtiquetas.getEtiquetas());
 	}
 
 
@@ -349,7 +385,8 @@ public class MainView extends HorizontalLayout {
 		priorityDateComboBox.setValue("Sin Prioridad");
 		datePicker.clear();
 		descripcion.clear();
-		tagsComboBox.clear();
+		tagsComboBox.setItems("Sin Categoría");
+		tagsComboBox.setValue("Sin Categoría");
 		save.setText("Crear");
 	}
 

@@ -11,7 +11,7 @@ public class ListaVistaElementoEtiquetas {
 	}
 	
 	
-	public ArrayList<VistaElementoEtiqueta> getEtiquetas() {
+	public ArrayList<VistaElementoEtiqueta> getVistaEtiquetas() {
 		return etiquetas;
 	}
 

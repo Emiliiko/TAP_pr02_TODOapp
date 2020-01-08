@@ -6,6 +6,8 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.Notification.Position;
 
 import java.util.Date;
 
@@ -20,32 +22,35 @@ public class VistaElementoTarea {
 	
 	// Elementos Tarea ocultos
 	private int ID;
-	private Date fecha;
-	private String descripcion;
-	private Etiqueta etiqueta;
 	
 	
 	
-	public VistaElementoTarea(Tarea tarea) { //, VerticalLayout vl) {
+	public VistaElementoTarea(Tarea tarea) {
 		
-		crearVista(tarea); //, vl);
+		crearVista(tarea);
+		
+	}
+	
+	public VistaElementoTarea() {
+		
 		
 	}
 
 
-	private void crearVista(Tarea tarea) { //, VerticalLayout vl) {
+	private void crearVista(Tarea tarea) {
 		
 		layout = new HorizontalLayout();
 		checkbox = new Checkbox();
+		checkbox.setId(Integer.toString(tarea.getID()));
+		
 		if(tarea.isCompletada()) {
 			checkbox.setValue(true);
-			//VerticalLayout c = (VerticalLayout) vl.getComponentAt(1); // Tareas completadas
-			//c.add(this.getLayout());
+			checkbox.setLabel("Terminada");
 		}
-		/*else {
-			VerticalLayout c = (VerticalLayout) vl.getComponentAt(0); // Tareas sin completar
-			c.add(this.getLayout());
-		}*/
+		else {
+			checkbox.setValue(false);
+			checkbox.setLabel("");
+		}
 		
 		prioridad = new Icon(VaadinIcon.CIRCLE);
 		prioridad.setSize("15px");
@@ -72,9 +77,6 @@ public class VistaElementoTarea {
 		
 		
 		ID = tarea.getID();
-		fecha =  tarea.getFecha();
-		descripcion = tarea.getDescripcion();
-		etiqueta = tarea.getEtiqueta();
 		
 	}
 
@@ -107,21 +109,6 @@ public class VistaElementoTarea {
 
 	public int getID() {
 		return ID;
-	}
-
-
-	public Date getFecha() {
-		return fecha;
-	}
-
-
-	public String getDescripcion() {
-		return descripcion;
-	}
-
-
-	public Etiqueta getEtiqueta() {
-		return etiqueta;
 	}
 
 

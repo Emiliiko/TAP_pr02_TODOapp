@@ -2,6 +2,7 @@ package ufv.tap.vaadinTODO.VaadinTODOapp;
 
 
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.ItemClickEvent;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -11,6 +12,8 @@ import java.util.Date;
 import java.time.ZoneId;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -33,12 +36,25 @@ import com.vaadin.flow.router.Route;
 @PWA(name = "TODO app", shortName = "TODO app")
 @Theme(value = Lumo.class, variant = Lumo.DARK)
 //@Theme(value = Material.class, variant = Material.DARK)
+
 public class MainView extends HorizontalLayout {
 	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+	// MODELO DE DATOS
+	
+	// ID TEMPORAL
+	public int idCount = 1;
+	// Lista Tareas
+	public ListaTareas listaTareas = new ListaTareas();
+	// Estado Etiqueta Seleccionada
+	public String estadoEtiqueta = "Todas";
+	// Estado Panel Edición
+	public String estadoPanelEdicion;
+	// Tarea auxiliar
+	public Tarea tareaEnEdicion;
+		
+	
+	// VISTA
+	
 	// Contenedor Etiquetas
 	public VerticalLayout tagLayout;
 	public Label tagLabel; // Título
@@ -70,15 +86,14 @@ public class MainView extends HorizontalLayout {
 	// Subcontenedor Etiquetas
 	public ComboBox<String> tagsComboBox;
 	//Subcontenedor guardar/crear - cancelar
-	public HorizontalLayout saveCancelLayout;
-	public HorizontalLayout saveCancelButtonsLayout;
+	public HorizontalLayout saveCancelDeleteLayout;
+	public HorizontalLayout saveCancelDeleteButtonsLayout;
 	public Notification saveNotification;
 	public Notification updateNotification;
 	public Button save;
 	public Button cancel;
+	public Button delete;
 	
-	// Lista Tareas
-	public ListaTareas listaTareas = new ListaTareas();
 	// Lista Vista Tareas
 	public ListaVistaElementoTareas listaVistaTareas = new ListaVistaElementoTareas();
 	// Lista Etiquetas
@@ -96,7 +111,7 @@ public class MainView extends HorizontalLayout {
     	this.setPadding(true);
     	this.setMargin(false);
     	this.setSpacing(true);
-    	this.getStyle().set("height", "100%");
+    	this.getStyle().set("height", "100%").set("overflow", "hidden");
     	//this.getStyle().set("background-color", "#26364D");
         
     	
@@ -114,6 +129,12 @@ public class MainView extends HorizontalLayout {
 		gridEtiquetas.getStyle().set("background", "none").set("border", "none").set("width", "300px");
 		gridEtiquetas.addComponentColumn(item -> item.getIcono());
 		gridEtiquetas.addComponentColumn(item -> item.getNombre());
+		gridEtiquetas.addItemClickListener(event -> {
+			ordernarTareas("Fecha de fin");
+			mostrarTareasPorEtiqueta(event.getItem().getNombre().getText());
+    	    updateVista();
+		});
+		
 		allTagsLayout.add(gridEtiquetas);
     	
     	tagLayout.add(tagLabel, allTagsLayout);
@@ -133,18 +154,24 @@ public class MainView extends HorizontalLayout {
     	noteLabel.getStyle().set("margin-right", "80px");
     	// ComboBox para ordenar las notas
     	orderComboBox = new ComboBox<>();
-    	orderComboBox.setItems("Todas", "Prioridad", "Fecha", "Completadas", "Vencidas", "Sin completar");
+    	orderComboBox.setItems("Prioridad Asc", "Prioridad Desc", "Fecha de fin");
     	orderComboBox.setPlaceholder("Ordenar por...");
     	orderComboBox.getStyle().set("padding", "0").set("margin-right", "80px");
+    	orderComboBox.addValueChangeListener(event -> {
+    	    ordernarTareas(event.getValue());
+    	    updateVista();
+    	});
     	// Botón para crear una nueva nota
     	newTask = new Button("+", event -> {
+    		estadoPanelEdicion = "Create";
     		editLayout.getStyle().set("left", "0");
+    		delete.getStyle().set("display", "none");
     		clearContent();
     	});
     	newTask.getStyle().set("min-width", "auto").set("border-radius", "100%")
     	.set("font-size", "var(--lumo-font-size-xl)").set("height", "41px").set("cursor", "pointer");
     	orderLayout.add(noteLabel, orderComboBox, newTask);
-    	
+    	// Grid Contenedor de tareas
 		gridTareas = new Grid<>();
 		gridTareas.getStyle().set("background", "none").set("border", "none").set("width", "500px");
 		gridTareas.addComponentColumn(item -> item.getCheckbox());
@@ -152,22 +179,9 @@ public class MainView extends HorizontalLayout {
 		gridTareas.addComponentColumn(item -> item.getTimeLeft());
 		gridTareas.addComponentColumn(item -> item.getTitulo());
 		gridTareas.addItemClickListener(event -> {
-			VistaElementoTarea vet = event.getItem();
-			editLayout.getStyle().set("left", "0");
-			titulo.setValue(vet.getTitulo().getText());
-			String color = vet.getPrioridad().getColor();
-			if(color == "red")
-				priorityDateComboBox.setValue("Alta");
-			else if(color == "orange")
-				priorityDateComboBox.setValue("Media");
-			else if(color == "limegreen")
-				priorityDateComboBox.setValue("Baja");
-			else
-				priorityDateComboBox.setValue("Sin Prioridad");
-			datePicker.setValue(vet.getFecha().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
-			descripcion.setValue(vet.getDescripcion());
-			tagsComboBox.setValue(vet.getEtiqueta().getNombre());
-			save.setText("Guardar");
+			estadoPanelEdicion = "Edit";
+			tareaEnEdicion = getTareaFromGrid(event.getItem());
+			mostrarTareaEnPanelEdicion(tareaEnEdicion);
 		});
 
     	mainTasksLayout.add(orderLayout, gridTareas);
@@ -236,7 +250,7 @@ public class MainView extends HorizontalLayout {
     	// Subcontenedor Etiquetas
     	tagsComboBox = new ComboBox<>();
     	tagsComboBox.setItems("Sin Categoría");
-		tagsComboBox.setValue("Sin Categoría");
+		//tagsComboBox.setValue("Sin Categoría");
     	tagsComboBox.setPlaceholder("Categoría");
     	tagsComboBox.getStyle().set("position", "relative");
     	tagsComboBox.getStyle().set("left", "50%");
@@ -247,13 +261,13 @@ public class MainView extends HorizontalLayout {
     		tagsComboBox.setValue(event.getDetail());
     	});
     	//Subcontenedor guardar/crear - cancelar
-    	saveCancelLayout = crearLayoutH();
-    	saveCancelLayout.getStyle().set("position", "relative");
-    	saveCancelLayout.getStyle().set("width", "100%");
-    	saveCancelButtonsLayout = crearLayoutH();
-    	saveCancelButtonsLayout.getStyle().set("position", "relative");
-    	saveCancelButtonsLayout.getStyle().set("left", "50%");
-    	saveCancelButtonsLayout.getStyle().set("transform", "translateX(-50%)");
+    	saveCancelDeleteLayout = crearLayoutH();
+    	saveCancelDeleteLayout.getStyle().set("position", "relative");
+    	saveCancelDeleteLayout.getStyle().set("width", "100%");
+    	saveCancelDeleteButtonsLayout = crearLayoutH();
+    	saveCancelDeleteButtonsLayout.getStyle().set("position", "relative");
+    	saveCancelDeleteButtonsLayout.getStyle().set("left", "50%");
+    	saveCancelDeleteButtonsLayout.getStyle().set("transform", "translateX(-50%)");
     	saveNotification = new Notification("La nota se ha creado", 3500, Position.TOP_END);
     	updateNotification = new Notification("La nota se ha actualizado", 3500, Position.TOP_END);
     	save = new Button("Crear", event -> {
@@ -268,8 +282,11 @@ public class MainView extends HorizontalLayout {
         			saveNotification.open();
 	    		}
 	    		else if(save.getText().equals("Guardar")) {
-	    			//updateTarea();
+	    			Tarea t = getTareaFromPanelEdicion();
+	    			updateTarea(t);
 	    			updateNotification.open();
+	    			clearContent();
+	    			updateVista();
 	    		}
     		}
     		
@@ -279,16 +296,121 @@ public class MainView extends HorizontalLayout {
     		editLayout.getStyle().set("left", "100%");
     	});
     	cancel.getStyle().set("margin", "0 5px").set("cursor", "pointer");
-    	saveCancelButtonsLayout.add(save, cancel);
-    	saveCancelLayout.add(saveCancelButtonsLayout);
+    	delete = new Button("Eliminar", event -> {
+    		deleteTarea(tareaEnEdicion.getID());
+    		clearContent();
+    		updateVista();
+    	});
+    	delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
+    	delete.getStyle().set("margin", "0 5px").set("cursor", "pointer");
+    	saveCancelDeleteButtonsLayout.add(save, cancel, delete);
+    	saveCancelDeleteLayout.add(saveCancelDeleteButtonsLayout);
     	
-    	editLayout.add(editLabel, titleLayout, priorityDateLayout, descripcion, tagsComboBox, saveCancelLayout);
+    	editLayout.add(editLabel, titleLayout, priorityDateLayout, descripcion, tagsComboBox, saveCancelDeleteLayout);
     	
     	add(tagLayout, mainTasksLayout, editLayout);
     	
+    	updateVista();
     }
     
-    public boolean datosValidados() {
+    private Tarea getTareaFromGrid(VistaElementoTarea vet) {
+    	Tarea t = new Tarea();
+    	
+    	for (Tarea tarea : listaTareas.getTareas()) {
+			if(tarea.getID() == vet.getID()) {
+				t = tarea;
+				break;
+			}
+		}
+    	return t;
+    }
+    
+    private void mostrarTareaEnPanelEdicion(Tarea t) {
+    	
+		editLayout.getStyle().set("left", "0");
+		titulo.setValue(t.getTitulo());
+		priorityDateComboBox.setValue(t.getPrioridad());
+		datePicker.setValue(t.getFecha().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+		descripcion.setValue(t.getDescripcion());
+		tagsComboBox.setValue(t.getEtiqueta().getNombre());
+		delete.getStyle().set("display", "inline");
+		save.setText("Guardar");
+	}
+
+    private void ordernarTareas(String value) {
+		
+    	ListaTareas ltAux = new ListaTareas();
+    	ListaTareas ltCompletadas = listaTareas.getCompletadas();
+    	ListaTareas ltSinCompletar = listaTareas.getSinCompletar();
+    	
+    	if(value.equals("Prioridad Asc")) {
+    		ltCompletadas.getTareasOrdenadas("Prioridad Asc");
+    		ltSinCompletar.getTareasOrdenadas("Prioridad Asc");
+    	}
+    	else if(value.equals("Prioridad Desc")) {
+    		ltCompletadas.getTareasOrdenadas("Prioridad Desc");
+    		ltSinCompletar.getTareasOrdenadas("Prioridad Desc");
+    	}
+    	else {
+    		ltCompletadas.getTareasOrdenadas("Fecha de fin");
+    		ltSinCompletar.getTareasOrdenadas("Fecha de fin");
+    	}
+		
+    	for (Tarea tarea : ltSinCompletar.getTareas()) {
+    		ltAux.addTarea(tarea);
+		}
+    	
+    	for (Tarea tarea : ltCompletadas.getTareas()) {
+			ltAux.addTarea(tarea);
+		}
+    	
+    	listaTareas = ltAux;
+	}
+
+   	private void mostrarTareasPorEtiqueta(String nombreEtiqueta) {
+    	
+		estadoEtiqueta = nombreEtiqueta;
+		
+    	listaVistaTareas.getTareas().clear();
+    	
+    	// Actualizar Contenedor Tareas
+    	if(nombreEtiqueta.equals("Todas")) {
+			for (Tarea tarea : listaTareas.getTareas()) {
+				listaVistaTareas.addTarea(new VistaElementoTarea(tarea));
+			}
+		}
+    	else {
+    		for (Tarea tarea : listaTareas.getTareas()) {
+    			if(tarea.getEtiqueta().getNombre().equals(nombreEtiqueta))
+    				listaVistaTareas.addTarea(new VistaElementoTarea(tarea));
+    		} 
+    	}
+    	
+    	for (VistaElementoTarea vet : listaVistaTareas.getTareas()) {
+			vet.getCheckbox().addClickListener(cb -> {
+				String id = cb.getSource().getId().get();
+				int idInt = Integer.parseInt(id);
+				Tarea t = listaTareas.getTareaById(idInt);
+				
+				if(cb.getSource().getValue()) {
+					t.setCompletada(true);
+					cb.getSource().setLabel("Terminada");
+				}
+					
+				else{
+					t.setCompletada(false);
+					cb.getSource().setLabel("");
+				}
+					
+				updateTarea(t);
+			});
+		}
+		
+		gridTareas.setItems(listaVistaTareas.getTareas());
+		
+	}
+
+   	public boolean datosValidados() {
 
 		Notification n;
 		
@@ -318,48 +440,12 @@ public class MainView extends HorizontalLayout {
 		
 		return true;
 	}
-
-
-	private void crearTarea() {
-		String tituloTarea = titulo.getValue();
-		String prioridad;
-		if(priorityDateComboBox.isEmpty())
-			prioridad = "Sin Prioridad";
-		else
-			prioridad = priorityDateComboBox.getValue();
-		Date fechaTarea = Date.from(datePicker.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
-		String descripcionTarea = descripcion.getValue();
-		boolean completada = false;
-		Etiqueta etiquetaTarea;
-		if(tagsComboBox.isEmpty())
-			etiquetaTarea = new Etiqueta("Sin Categoría");
-		else
-			etiquetaTarea = new Etiqueta(tagsComboBox.getValue());
-		
-		// Backend
-		Tarea t = new Tarea(tituloTarea, prioridad, fechaTarea, descripcionTarea, completada, etiquetaTarea);
-		listaTareas.addTarea(t);
-		
-		// Front
-		updateVista();
-		
-		editLayout.getStyle().set("transition", ".7s").set("position", "relative").set("left", "100%");
-	}
-
-
-	private void updateVista() {
-		
-		// Actualizar Contenedor Tareas
-		listaVistaTareas.getTareas().clear();
-		
-		for (Tarea tarea : listaTareas.getTareas()) {
-			listaVistaTareas.addTarea(new VistaElementoTarea(tarea));
-		}
-		
-		gridTareas.setItems(listaVistaTareas.getTareas());
+	
+	
+   	private void updateVista() {
 		
 		// Actualizar Contenedor Etiquetas
-		listaVistaEtiquetas.getEtiquetas().clear();
+		listaVistaEtiquetas.getVistaEtiquetas().clear();
 		listaEtiquetas.getEtiquetas().clear();
 		// Creación de array temporal de Etiquetas
 		ArrayList<String> nombres = listaEtiquetas.getTagLabels();
@@ -371,27 +457,44 @@ public class MainView extends HorizontalLayout {
 			}
 		}
 		
+		listaVistaEtiquetas.addEtiqueta(new VistaElementoEtiqueta(new Etiqueta("Todas")));
 		for (Etiqueta etiqueta : listaEtiquetas.getEtiquetas()) {
 			listaVistaEtiquetas.addEtiqueta(new VistaElementoEtiqueta(etiqueta));
 		}
 		
-		gridEtiquetas.setItems(listaVistaEtiquetas.getEtiquetas());
+		gridEtiquetas.setItems(listaVistaEtiquetas.getVistaEtiquetas());
+		
+		mostrarTareasPorEtiqueta(estadoEtiqueta);
+		
+		focusEtiquetaSeleccionada();
 	}
 
+	
+   	
+   	private void focusEtiquetaSeleccionada() {
+		
+		for (VistaElementoEtiqueta vee : listaVistaEtiquetas.getVistaEtiquetas()) {
+			if(vee.getNombre().getText().equals(estadoEtiqueta)) {
+				gridEtiquetas.getSelectionModel().select(vee);
+				return;
+			}
+		}
+	}
 
-	private void clearContent() {
+	
+   	private void clearContent() {
 		titulo.clear();
 		prioridadEdit.setColor("lightgray");
 		priorityDateComboBox.setValue("Sin Prioridad");
 		datePicker.clear();
 		descripcion.clear();
-		tagsComboBox.setItems("Sin Categoría");
-		tagsComboBox.setValue("Sin Categoría");
+		tagsComboBox.setItems(listaEtiquetas.getNombreEtiquetas(listaTareas, "Sin Categoría"));
 		save.setText("Crear");
+		delete.getStyle().set("display", "none");
 	}
 
-
-	public static HorizontalLayout crearLayoutH() {
+	
+   	public static HorizontalLayout crearLayoutH() {
     	HorizontalLayout layout = new HorizontalLayout();
     	//layout.getStyle().set("border", "1px solid white");
 
@@ -402,7 +505,9 @@ public class MainView extends HorizontalLayout {
     	return layout;
     }
 
-	public static VerticalLayout crearLayoutV() {
+	
+   	
+   	public static VerticalLayout crearLayoutV() {
 		VerticalLayout layout = new VerticalLayout();
 		//layout.getStyle().set("border", "1px solid white");
 		layout.getStyle().set("border-radius", "10px");
@@ -415,4 +520,59 @@ public class MainView extends HorizontalLayout {
     	return layout;
 	}
     
+	private void crearTarea() {
+		
+		// BACKEND
+		// EL ID TIENE QUE CREARLO EL BACKEND CUANDO LE ENVIAMOS UNA NUEVA TAREA
+		// CUANDO ESTÁ EN MODO EDICIÓN, YA TIENE EL ID
+		Tarea t = getTareaFromPanelEdicion();
+		createTarea(t);
+		
+		// Front
+		updateVista();
+		
+		editLayout.getStyle().set("transition", ".7s").set("position", "relative").set("left", "100%");
+	}
+	
+	public Tarea getTareaFromPanelEdicion() {
+		int id;
+		if(estadoPanelEdicion.equals("Create"))
+			id = idCount++;
+		else
+			id = tareaEnEdicion.getID();
+		String tituloTarea = titulo.getValue();
+		String prioridad;
+		if(priorityDateComboBox.isEmpty())
+			prioridad = "Sin Prioridad";
+		else
+			prioridad = priorityDateComboBox.getValue();
+		Date fechaTarea = Date.from(datePicker.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
+		String descripcionTarea = descripcion.getValue();
+		boolean completada;
+		if(estadoPanelEdicion.equals("Create"))
+			completada = false;
+		else
+			completada = tareaEnEdicion.isCompletada();
+		Etiqueta etiquetaTarea;
+		if(tagsComboBox.isEmpty())
+			etiquetaTarea = new Etiqueta("Sin Categoría");
+		else
+			etiquetaTarea = new Etiqueta(tagsComboBox.getValue());
+		
+		return new Tarea(id, tituloTarea, prioridad, fechaTarea, descripcionTarea, completada, etiquetaTarea);
+	}
+	
+	// CRUD
+	// Create
+	private void createTarea(Tarea t) {
+		listaTareas.addTarea(t);
+	}
+	// Update
+	private void updateTarea(Tarea t) {
+		listaTareas.updateTarea(t);
+	}
+	// Delete
+	private void deleteTarea(int id) {
+		listaTareas.deleteTarea(id);
+	}
 }

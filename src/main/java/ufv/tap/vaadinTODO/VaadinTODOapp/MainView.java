@@ -67,6 +67,8 @@ public class MainView extends HorizontalLayout {
 	private ListaTareas listaTareas = new ListaTareas();
 	// Estado Etiqueta Seleccionada
 	private String estadoEtiqueta = "Todas";
+	// Estado Etiqueta Seleccionada
+	private String estadoComboBoxOrdenar = "Fecha de fin";
 	// Estado Panel Edición
 	private String estadoPanelEdicion;
 	// Tarea auxiliar
@@ -180,7 +182,7 @@ public class MainView extends HorizontalLayout {
     	orderComboBox.setPlaceholder("Ordenar por...");
     	orderComboBox.getStyle().set("padding", "0").set("margin-right", "80px");
     	orderComboBox.addValueChangeListener(event -> {
-    	    ordernarTareas(event.getValue());
+    		estadoComboBoxOrdenar = event.getValue();
     	    updateVista();
     	});
     	// Botón para crear una nueva nota
@@ -470,7 +472,7 @@ public class MainView extends HorizontalLayout {
    	private void updateVista() {
    		
    		listaTareas.setTareas(requestGET());
-   		ordernarTareas("Fecha de fin");
+   		ordernarTareas(estadoComboBoxOrdenar);
 		
 		// Actualizar Contenedor Etiquetas
 		listaVistaEtiquetas.getVistaEtiquetas().clear();
@@ -687,7 +689,6 @@ public class MainView extends HorizontalLayout {
 		} catch (ParseException | java.text.ParseException e1) {
 			e1.printStackTrace();
 		}
-		System.out.println("Probando que funciona la fecha: " + date);
 		return date;
 	}
 
@@ -697,7 +698,6 @@ public class MainView extends HorizontalLayout {
 		
 		DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");  
 		String strDate = dateFormat.format(t.getFecha());  
-		System.out.println(t.getFecha().toString());
 		
 		
 		HttpClient httpclient = HttpClients.createDefault();

@@ -176,6 +176,48 @@
 					    </execution>
 					  </executions>
 					</plugin>
+					<plugin>
+				    <!-- no need to specify the groupId, it defaults to "org.apache.maven.plugins" -->
+				    <artifactId>maven-assembly-plugin</artifactId>
+				    <version>2.6</version> <!-- explicit version is safer for build consistency than implicit -->
+				    <executions>
+				        <execution>
+				            <id>make-assembly</id>
+				            <phase>package</phase> <!-- bind the execution to the "package" phase -->
+				            <goals>
+				                <goal>single</goal>
+				            </goals>
+				            <configuration>
+				                <descriptors>
+				                    <descriptor>src/assembly/distribution.xml</descriptor> <!-- use the path to the file starting from base directory -->
+				                </descriptors>
+				            </configuration>
+				        </execution>
+				    </executions>
+				</plugin>
+					<plugin>
+					    <groupId>org.apache.maven.plugins</groupId>
+					    <artifactId>maven-assembly-plugin</artifactId>
+					    <version>3.0.0</version>
+					    <configuration>
+					     <descriptorRefs>
+					      <descriptorRef>jar-with-dependencies</descriptorRef>
+					     </descriptorRefs>
+					     <archive>
+					      <manifest>
+					       <mainClass>ufv.tap.vaadinTODO.VaadinTODOapp.MainView</mainClass>
+					      </manifest>
+					     </archive>
+					    </configuration>
+					    <executions>
+					     <execution>
+					      <phase>package</phase>
+					      <goals>
+					       <goal>single</goal>
+					      </goals>
+					     </execution>
+					    </executions>
+					   </plugin>
                     <plugin>
 				        <groupId>org.sonarsource.scanner.maven</groupId>
 				        <artifactId>sonar-maven-plugin</artifactId>

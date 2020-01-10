@@ -2,21 +2,42 @@ package ufv.tap.vaadinTODO.VaadinTODOapp;
 
 
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.ItemClickEvent;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.ParseException;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -27,6 +48,7 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
+
 import com.vaadin.flow.router.Route;
 
 /**
@@ -41,65 +63,65 @@ public class MainView extends HorizontalLayout {
 	
 	// MODELO DE DATOS
 	
-	// ID TEMPORAL
-	public int idCount = 1;
 	// Lista Tareas
-	public ListaTareas listaTareas = new ListaTareas();
+	private ListaTareas listaTareas = new ListaTareas();
 	// Estado Etiqueta Seleccionada
-	public String estadoEtiqueta = "Todas";
+	private String estadoEtiqueta = "Todas";
 	// Estado Panel Edición
-	public String estadoPanelEdicion;
+	private String estadoPanelEdicion;
 	// Tarea auxiliar
-	public Tarea tareaEnEdicion;
+	private Tarea tareaEnEdicion;
 		
 	
 	// VISTA
 	
 	// Contenedor Etiquetas
-	public VerticalLayout tagLayout;
-	public Label tagLabel; // Título
+	private VerticalLayout tagLayout;
+	private Label tagLabel; // Título
 	// Subcontenedor con todas las etiquetas
-	public VerticalLayout allTagsLayout;
-	public Grid<VistaElementoEtiqueta> gridEtiquetas;
+	private VerticalLayout allTagsLayout;
+	private Grid<VistaElementoEtiqueta> gridEtiquetas;
 	
 	// Contenedor Tareas
-	public VerticalLayout mainTasksLayout;
-	public HorizontalLayout orderLayout; // Subcontenedor Título - Filtros
-	public Label noteLabel; // Título
-	public ComboBox<String> orderComboBox; // ComboBox para ordenar las notas
-	public Grid<VistaElementoTarea> gridTareas; // Grid contenedor de tareas
-	public Button newTask;// Botón para crear una nueva nota
+	private VerticalLayout mainTasksLayout;
+	private HorizontalLayout orderLayout; // Subcontenedor Título - Filtros
+	private Label noteLabel; // Título
+	private ComboBox<String> orderComboBox; // ComboBox para ordenar las notas
+	private Grid<VistaElementoTarea> gridTareas; // Grid contenedor de tareas
+	private Button newTask;// Botón para crear una nueva nota
 	
 	// Contenedor Edición
-	public VerticalLayout editLayout;
-	public Label editLabel; // Título
+	private VerticalLayout editLayout;
+	private Label editLabel; // Título
 	// Subcontenedor Título
-	public HorizontalLayout titleLayout;
-	public TextField titulo;
+	private HorizontalLayout titleLayout;
+	private TextField titulo;
 	// Subcontenedor prioridad - fecha
-	public HorizontalLayout priorityDateLayout;
-	public Icon prioridadEdit;
-	public ComboBox<String> priorityDateComboBox;
-	public DatePicker datePicker;
+	private HorizontalLayout priorityDateLayout;
+	private Icon prioridadEdit;
+	private ComboBox<String> priorityDateComboBox;
+	private DatePicker datePicker;
 	// Subcontenedor Descripción
-	public TextArea descripcion;
+	private TextArea descripcion;
 	// Subcontenedor Etiquetas
-	public ComboBox<String> tagsComboBox;
+	private ComboBox<String> tagsComboBox;
 	//Subcontenedor guardar/crear - cancelar
-	public HorizontalLayout saveCancelDeleteLayout;
-	public HorizontalLayout saveCancelDeleteButtonsLayout;
-	public Notification saveNotification;
-	public Notification updateNotification;
-	public Button save;
-	public Button cancel;
-	public Button delete;
+	private HorizontalLayout saveCancelDeleteLayout;
+	private HorizontalLayout saveCancelDeleteButtonsLayout;
+	private Notification saveNotification;
+	private Notification updateNotification;
+	private Button save;
+	private Button cancel;
+	private Button delete;
 	
 	// Lista Vista Tareas
-	public ListaVistaElementoTareas listaVistaTareas = new ListaVistaElementoTareas();
+	private ListaVistaElementoTareas listaVistaTareas = new ListaVistaElementoTareas();
 	// Lista Etiquetas
-	public ListaEtiquetas listaEtiquetas = new ListaEtiquetas();
+	private ListaEtiquetas listaEtiquetas = new ListaEtiquetas();
 	// Lista Vista Etiquetas
-	public ListaVistaElementoEtiquetas listaVistaEtiquetas = new ListaVistaElementoEtiquetas();
+	private ListaVistaElementoEtiquetas listaVistaEtiquetas = new ListaVistaElementoEtiquetas();
+	
+	
 	
 	
 	// Constructor
@@ -220,13 +242,13 @@ public class MainView extends HorizontalLayout {
     	priorityDateComboBox.setValue("Sin Prioridad");
     	priorityDateComboBox.getStyle().set("margin-right", "25px");
     	priorityDateComboBox.addValueChangeListener(event -> {
-    	    if (event.getValue() == "Alta") {
+    	    if (event.getValue().equals("Alta")) {
     	    	prioridadEdit.setColor("red");
     	    } 
-    	    else if (event.getValue() == "Media"){
+    	    else if (event.getValue().equals("Media")){
     	    	prioridadEdit.setColor("orange");
     	    }
-    	    else if (event.getValue() == "Baja"){
+    	    else if (event.getValue().equals("Baja")){
     	    	prioridadEdit.setColor("limegreen");
     	    }
     	    else {
@@ -235,6 +257,7 @@ public class MainView extends HorizontalLayout {
     	});
     	datePicker = new DatePicker();
     	datePicker.setPlaceholder("Fecha límite");
+    	datePicker.setLocale(Locale.ITALY);
     	priorityDateLayout.add(prioridadEdit, priorityDateComboBox, datePicker);
     	priorityDateLayout.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.CENTER);
     	// Subcontenedor Descripción
@@ -283,10 +306,11 @@ public class MainView extends HorizontalLayout {
 	    		}
 	    		else if(save.getText().equals("Guardar")) {
 	    			Tarea t = getTareaFromPanelEdicion();
-	    			updateTarea(t);
+	    			requestPUT(t.getID(), t);
 	    			updateNotification.open();
 	    			clearContent();
 	    			updateVista();
+	    			editLayout.getStyle().set("left", "100%");
 	    		}
     		}
     		
@@ -297,9 +321,10 @@ public class MainView extends HorizontalLayout {
     	});
     	cancel.getStyle().set("margin", "0 5px").set("cursor", "pointer");
     	delete = new Button("Eliminar", event -> {
-    		deleteTarea(tareaEnEdicion.getID());
+    		requestDELETE(tareaEnEdicion.getID());
     		clearContent();
     		updateVista();
+    		editLayout.getStyle().set("left", "100%");
     	});
     	delete.addThemeVariants(ButtonVariant.LUMO_ERROR);
     	delete.getStyle().set("margin", "0 5px").set("cursor", "pointer");
@@ -401,8 +426,8 @@ public class MainView extends HorizontalLayout {
 					t.setCompletada(false);
 					cb.getSource().setLabel("");
 				}
-					
-				updateTarea(t);
+				requestPUT(Integer.parseInt(id), t);
+				updateVista();
 			});
 		}
 		
@@ -443,6 +468,9 @@ public class MainView extends HorizontalLayout {
 	
 	
    	private void updateVista() {
+   		
+   		listaTareas.setTareas(requestGET());
+   		ordernarTareas("Fecha de fin");
 		
 		// Actualizar Contenedor Etiquetas
 		listaVistaEtiquetas.getVistaEtiquetas().clear();
@@ -470,7 +498,6 @@ public class MainView extends HorizontalLayout {
 	}
 
 	
-   	
    	private void focusEtiquetaSeleccionada() {
 		
 		for (VistaElementoEtiqueta vee : listaVistaEtiquetas.getVistaEtiquetas()) {
@@ -481,7 +508,6 @@ public class MainView extends HorizontalLayout {
 		}
 	}
 
-	
    	private void clearContent() {
 		titulo.clear();
 		prioridadEdit.setColor("lightgray");
@@ -493,7 +519,6 @@ public class MainView extends HorizontalLayout {
 		delete.getStyle().set("display", "none");
 	}
 
-	
    	public static HorizontalLayout crearLayoutH() {
     	HorizontalLayout layout = new HorizontalLayout();
     	//layout.getStyle().set("border", "1px solid white");
@@ -504,8 +529,6 @@ public class MainView extends HorizontalLayout {
     	
     	return layout;
     }
-
-	
    	
    	public static VerticalLayout crearLayoutV() {
 		VerticalLayout layout = new VerticalLayout();
@@ -523,12 +546,10 @@ public class MainView extends HorizontalLayout {
 	private void crearTarea() {
 		
 		// BACKEND
-		// EL ID TIENE QUE CREARLO EL BACKEND CUANDO LE ENVIAMOS UNA NUEVA TAREA
-		// CUANDO ESTÁ EN MODO EDICIÓN, YA TIENE EL ID
 		Tarea t = getTareaFromPanelEdicion();
-		createTarea(t);
+		requestPOST(t);
 		
-		// Front
+		// FRONTEND
 		updateVista();
 		
 		editLayout.getStyle().set("transition", ".7s").set("position", "relative").set("left", "100%");
@@ -537,7 +558,7 @@ public class MainView extends HorizontalLayout {
 	public Tarea getTareaFromPanelEdicion() {
 		int id;
 		if(estadoPanelEdicion.equals("Create"))
-			id = idCount++;
+			id = 0;
 		else
 			id = tareaEnEdicion.getID();
 		String tituloTarea = titulo.getValue();
@@ -562,17 +583,169 @@ public class MainView extends HorizontalLayout {
 		return new Tarea(id, tituloTarea, prioridad, fechaTarea, descripcionTarea, completada, etiquetaTarea);
 	}
 	
-	// CRUD
-	// Create
-	private void createTarea(Tarea t) {
-		listaTareas.addTarea(t);
+	
+	// POST
+	private void requestPOST(Tarea t) {
+		
+		DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");  
+		String strDate = dateFormat.format(t.getFecha());  
+		
+		
+		HttpClient httpclient = HttpClients.createDefault();
+		HttpPost httppost = new HttpPost("https://afternoon-springs-62136.herokuapp.com/add");
+		
+		// Request parameters and other properties.
+		List<NameValuePair> params = new ArrayList<NameValuePair>();
+		params.add(new BasicNameValuePair("titulo", t.getTitulo()));
+		params.add(new BasicNameValuePair("prioridad", t.getPrioridad()));
+		params.add(new BasicNameValuePair("fecha", strDate));
+		params.add(new BasicNameValuePair("descripcion", t.getDescripcion()));
+		params.add(new BasicNameValuePair("etiqueta", t.getEtiqueta().getNombre()));
+		try {
+			httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			httpclient.execute(httppost);
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
 	}
-	// Update
-	private void updateTarea(Tarea t) {
-		listaTareas.updateTarea(t);
+
+	//GET
+	private ArrayList<Tarea> requestGET() {
+		
+		HttpClient httpclient = HttpClients.createDefault();
+		HttpGet httpget = new HttpGet("https://afternoon-springs-62136.herokuapp.com/");
+		
+		HttpResponse response = null;
+		HttpEntity entity = null;
+		try {
+			response = httpclient.execute(httpget);
+			entity = response.getEntity();
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+			
+		} 
+		
+		String json = "";
+		try {
+			json += EntityUtils.toString(entity);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		
+		JSONArray jsonTareas = new JSONArray(json);
+		ArrayList<Tarea> listaTareas = new ArrayList<Tarea>();
+		
+		for (int i = 0; i < jsonTareas.length(); i++) {
+			Tarea t = getTareaFromJSONArray(jsonTareas, i);
+			listaTareas.add(t);
+		}
+		
+		return listaTareas;
 	}
-	// Delete
-	private void deleteTarea(int id) {
-		listaTareas.deleteTarea(id);
+
+	private Tarea getTareaFromJSONArray(JSONArray jsonTareas, int i) {
+		int id = jsonTareas.getJSONObject(i).getInt("id");
+		String titulo = jsonTareas.getJSONObject(i).getString("titulo");
+		String prioridad = jsonTareas.getJSONObject(i).getString("prioridad");
+		String dateStr = jsonTareas.getJSONObject(i).getString("fecha");
+		Date fecha = getFechaFromString(dateStr);
+		String descripcion = jsonTareas.getJSONObject(i).getString("descripcion");
+		boolean completada = jsonTareas.getJSONObject(i).getBoolean("completada");
+		JSONObject etiquetaJSON = (JSONObject)(jsonTareas.getJSONObject(i).get("etiqueta"));
+		Etiqueta etiqueta = new Etiqueta(etiquetaJSON.getString("nombre"));
+		
+		return new Tarea(id, titulo, prioridad, fecha, descripcion, completada, etiqueta);
+	}
+
+	private Date getFechaFromString(String dateStr) {
+		
+		String[] fechaSplit = dateStr.split("T");
+		String fechaNumeros = fechaSplit[0];
+		String[] fechaSplitNumeros = fechaNumeros.split("-");
+		String s = fechaSplitNumeros[2] + "-" + fechaSplitNumeros[1] + "-" + fechaSplitNumeros[0];
+		
+		SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
+		Date date = null;
+		try {
+			date = format.parse(s);
+		} catch (ParseException | java.text.ParseException e1) {
+			e1.printStackTrace();
+		}
+		System.out.println("Probando que funciona la fecha: " + date);
+		return date;
+	}
+
+	// PUT
+	private void requestPUT(int id, Tarea t) {
+
+		
+		DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");  
+		String strDate = dateFormat.format(t.getFecha());  
+		System.out.println(t.getFecha().toString());
+		
+		
+		HttpClient httpclient = HttpClients.createDefault();
+		HttpPut httpput = new HttpPut("https://afternoon-springs-62136.herokuapp.com/update/"+id);
+		
+		// Request parameters and other properties.
+		List<NameValuePair> params = new ArrayList<NameValuePair>();
+		params.add(new BasicNameValuePair("id", Integer.toString(id)));
+		params.add(new BasicNameValuePair("titulo", t.getTitulo()));
+		params.add(new BasicNameValuePair("prioridad", t.getPrioridad()));
+		params.add(new BasicNameValuePair("fecha", strDate));
+		params.add(new BasicNameValuePair("completada", Boolean.toString(t.isCompletada())));
+		params.add(new BasicNameValuePair("descripcion", t.getDescripcion()));
+		params.add(new BasicNameValuePair("etiqueta", t.getEtiqueta().getNombre()));
+		try {
+			httpput.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			httpclient.execute(httpput);
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} 
+		
+	}
+	
+	// DELETE
+	private void requestDELETE(int id) {
+
+		HttpClient httpclient = HttpClients.createDefault();
+		HttpDelete httpdelete = new HttpDelete("https://afternoon-springs-62136.herokuapp.com/delete/"+id);
+		
+		// Request parameters and other properties.
+		List<NameValuePair> params = new ArrayList<NameValuePair>();
+		params.add(new BasicNameValuePair("id", Integer.toString(id)));
+		
+		
+		try {
+			httpclient.execute(httpdelete);
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 }

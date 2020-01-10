@@ -54,13 +54,13 @@ public class VistaElementoTarea {
 		
 		prioridad = new Icon(VaadinIcon.CIRCLE);
 		prioridad.setSize("15px");
-		if(tarea.getPrioridad() == "Alta") {
+		if(tarea.getPrioridad().equals("Alta")) {
 			prioridad.setColor("red");
 		}
-		else if(tarea.getPrioridad() == "Media") {
+		else if(tarea.getPrioridad().equals("Media")) {
 			prioridad.setColor("orange");
 		}
-		else if(tarea.getPrioridad() == "Baja") {
+		else if(tarea.getPrioridad().equals("Baja")) {
 			prioridad.setColor("limegreen");
 		}
 		else {

@@ -1,0 +1,6 @@
+projectKey=ufv.tap.vaadinTODO:vaadinTODO
+serverUrl=http://ip172-18-0-40-bobs0ojjagq000ao1eug-9000.direct.labs.play-with-docker.com
+serverVersion=7.9.2.30863
+dashboardUrl=http://ip172-18-0-40-bobs0ojjagq000ao1eug-9000.direct.labs.play-with-docker.com/dashboard?id=ufv.tap.vaadinTODO%3AvaadinTODO
+ceTaskId=AW-M8utuJPuqrsJR6Bss
+ceTaskUrl=http://ip172-18-0-40-bobs0ojjagq000ao1eug-9000.direct.labs.play-with-docker.com/api/ce/task?id=AW-M8utuJPuqrsJR6Bss

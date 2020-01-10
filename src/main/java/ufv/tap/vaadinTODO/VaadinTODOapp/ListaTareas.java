@@ -16,6 +16,10 @@ public class ListaTareas {
 		return tareas;
 	}
 	
+	public void setTareas(ArrayList<Tarea> tareas) {
+		this.tareas = tareas;
+	}
+
 	public void addTarea(Tarea t) {
 		tareas.add(t);
 	}

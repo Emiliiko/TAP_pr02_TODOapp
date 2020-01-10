@@ -58,6 +58,26 @@
             <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>
+        
+        <dependency>
+		  <groupId>org.apache.httpcomponents</groupId>
+		  <artifactId>httpclient</artifactId>
+		  <version>4.5.10</version>
+		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.json/json -->
+		<dependency>
+		    <groupId>org.json</groupId>
+		    <artifactId>json</artifactId>
+		    <version>20190722</version>
+		</dependency>
+
+		<dependency>
+		    <groupId>org.sonarsource.scanner.maven</groupId>
+		    <artifactId>sonar-maven-plugin</artifactId>
+		    <version>3.6.0.1398</version>
+		</dependency>
+    
     </dependencies>
 
     <build>
@@ -109,6 +129,11 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <plugin>
+				        <groupId>org.sonarsource.scanner.maven</groupId>
+				        <artifactId>sonar-maven-plugin</artifactId>
+				        <version>3.6.0.1398</version>
+				    </plugin>
                 </plugins>
             </build>
         </profile>
